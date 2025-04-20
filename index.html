@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="ms">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Sistem Pembungkusan Belinjo</title>
+  <style>
+    body { font-family: Arial, sans-serif; margin: 20px; background: #f7f7f7; }
+    h2 { margin-top: 40px; display: flex; justify-content: space-between; align-items: center; }
+    .container { background: white; padding: 20px; margin-bottom: 40px; border-radius: 10px; box-shadow: 0 0 10px rgba(0,0,0,0.1); }
+    table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+    th, td { border: 1px solid #ddd; padding: 8px; text-align: center; }
+    th { background-color: #007BFF; color: white; }
+    button { margin: 5px; padding: 8px 12px; border: none; background: #007BFF; color: white; cursor: pointer; border-radius: 5px; }
+    button:hover { background: #0056b3; }
+    button.delete { background: #dc3545; }
+    button.delete:hover { background: #a71d2a; }
+    input, select { padding: 5px; margin: 5px; }
+    .total-ringkasan { background: #f1f1f1; padding: 10px; margin-top: 10px; }
+  </style>
+</head>
+<body>
+
+<h1>Sistem Pembungkusan Belinjo</h1>
+
+<input type="text" id="namaInput" placeholder="Masukkan nama">
+<button onclick="tambahNama()">Tambah Nama</button>
+
+<div id="namaSections"></div>
+
+<script>
+  const namaSections = document.getElementById('namaSections');
+  const data = {};
+
+  function dapatkanHari(datestring) {
+    if (!datestring) return '';
+    const hariList = ['Ahad', 'Isnin', 'Selasa', 'Rabu', 'Khamis', 'Jumaat', 'Sabtu'];
+    const tarikhObj = new Date(datestring);
+    return hariList[tarikhObj.getDay()];
+  }
+
+  function formatTarikh(datestring) {
+    if (!datestring) return '';
+    const d = new Date(datestring);
+    const day = String(d.getDate()).padStart(2, '0');
+    const month = String(d.getMonth() + 1).padStart(2, '0');
+    const year = d.getFullYear();
+    return `${day}/${month}/${year}`;
+  }
+
+  function tambahNama() {
+    const nama = document.getElementById('namaInput').value.trim();
+    if (!nama) return;
+    if (data[nama]) return alert('Nama sudah wujud');
+
+    data[nama] = [];
+    renderTable(nama);
+    document.getElementById('namaInput').value = '';
+  }
+
+  function renderTable(nama) {
+    const container = document.createElement('div');
+    container.className = 'container';
+
+    container.innerHTML = `
+      <h2>${nama} <button class="delete" onclick="padamNama('${nama}')">Padam Nama</button></h2>
+      <input type="date" id="tarikh_${nama}">
+      <input type="text" id="hari_${nama}" placeholder="Hari">
+      <input type="text" id="balangBesar_${nama}" placeholder="Balang Besar">
+      <input type="text" id="balangKecil_${nama}" placeholder="Balang Kecil">
+      <input type="text" id="plastik_${nama}" placeholder="Plastik">
+      <input type="text" id="kotak_${nama}" placeholder="Kotak">
+      <input type="text" id="kotakPizza_${nama}" placeholder="Kotak Pizza">
+      <button onclick="tambahRekod('${nama}')">Tambah Rekod</button>
+      <div class="total-ringkasan" id="ringkasan_${nama}"></div>
+      <table id="table_${nama}"></table>
+    `;
+
+    namaSections.appendChild(container);
+    renderTableRows(nama);
+  }
+
+  function renderTableRows(nama) {
+    const table = document.getElementById(`table_${nama}`);
+    const rekod = data[nama];
+
+    table.innerHTML = `
+      <tr>
+        <th>#</th>
+        <th>Tarikh</th>
+        <th>Hari</th>
+        <th>Balang Besar</th>
+        <th>Balang Kecil</th>
+        <th>Plastik</th>
+        <th>Kotak</th>
+        <th>Kotak Pizza</th>
+        <th>Tindakan</th>
+      </tr>
+    `;
+
+    let totalBB = 0, totalBK = 0, totalP = 0, totalK = 0, totalKP = 0;
+
+    rekod.forEach((r, i) => {
+      totalBB += parseInt(r.balangBesar) || 0;
+      totalBK += parseInt(r.balangKecil) || 0;
+      totalP += parseInt(r.plastik) || 0;
+      totalK += parseInt(r.kotak) || 0;
+      totalKP += parseInt(r.kotakPizza) || 0;
+
+      table.innerHTML += `
+        <tr>
+          <td>${i + 1}</td>
+          <td>${formatTarikh(r.tarikh)}</td>
+          <td>${r.hari}</td>
+          <td>${r.balangBesar}</td>
+          <td>${r.balangKecil}</td>
+          <td>${r.plastik}</td>
+          <td>${r.kotak}</td>
+          <td>${r.kotakPizza}</td>
+          <td>
+            <button onclick="editRekod('${nama}', ${i})">Edit</button>
+            <button onclick="padamRekod('${nama}', ${i})">Padam</button>
+          </td>
+        </tr>
+      `;
+    });
+
+    document.getElementById(`ringkasan_${nama}`).innerText = 
+      `Jumlah BB: ${totalBB} | BK: ${totalBK} | Plastik: ${totalP} | Kotak: ${totalK} | Kotak Pizza: ${totalKP}`;
+  }
+
+  function tambahRekod(nama) {
+    const tarikh = document.getElementById(`tarikh_${nama}`).value;
+    let hari = document.getElementById(`hari_${nama}`).value.trim();
+    const balangBesar = document.getElementById(`balangBesar_${nama}`).value.trim();
+    const balangKecil = document.getElementById(`balangKecil_${nama}`).value.trim();
+    const plastik = document.getElementById(`plastik_${nama}`).value.trim();
+    const kotak = document.getElementById(`kotak_${nama}`).value.trim();
+    const kotakPizza = document.getElementById(`kotakPizza_${nama}`).value.trim();
+
+    if (!hari && tarikh) {
+      hari = dapatkanHari(tarikh);
+    }
+
+    data[nama].push({ tarikh, hari, balangBesar, balangKecil, plastik, kotak, kotakPizza });
+    renderTableRows(nama);
+
+    document.getElementById(`tarikh_${nama}`).value = '';
+    document.getElementById(`hari_${nama}`).value = '';
+    document.getElementById(`balangBesar_${nama}`).value = '';
+    document.getElementById(`balangKecil_${nama}`).value = '';
+    document.getElementById(`plastik_${nama}`).value = '';
+    document.getElementById(`kotak_${nama}`).value = '';
+    document.getElementById(`kotakPizza_${nama}`).value = '';
+  }
+
+  function editRekod(nama, index) {
+    const rekod = data[nama][index];
+    document.getElementById(`tarikh_${nama}`).value = rekod.tarikh;
+    document.getElementById(`hari_${nama}`).value = rekod.hari;
+    document.getElementById(`balangBesar_${nama}`).value = rekod.balangBesar;
+    document.getElementById(`balangKecil_${nama}`).value = rekod.balangKecil;
+    document.getElementById(`plastik_${nama}`).value = rekod.plastik;
+    document.getElementById(`kotak_${nama}`).value = rekod.kotak;
+    document.getElementById(`kotakPizza_${nama}`).value = rekod.kotakPizza;
+
+    data[nama].splice(index, 1); 
+    renderTableRows(nama);
+  }
+
+  function padamNama(nama) {
+    if (confirm('Padam semua rekod untuk ' + nama + '?')) {
+      delete data[nama];
+      namaSections.innerHTML = '';
+      Object.keys(data).forEach(n => renderTable(n));
+    }
+  }
+
+  function padamRekod(nama, index) {
+    data[nama].splice(index, 1);
+    renderTableRows(nama);
+  }
+</script>
+
+</body>
+</html>
